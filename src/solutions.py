@@ -89,39 +89,43 @@ def energy_value_and_grad(
     """
 
     params_flat, re = ravel_pytree(params)
+    logpsi_flat = lambda p, x: logpsi(re(p), x)
 
-    O = jax.vmap(jax.grad(logpsi), in_axes=(None, 0))(params, samples)
-    local_energies = jax.vmap(lambda x: eloc(logpsi, params, x))(samples)
+    O = jax.vmap(jax.grad(logpsi_flat), in_axes=(None, 0))(params_flat, samples)
+    local_energies = jax.vmap(lambda x: eloc(logpsi_flat, params_flat, x))(samples)
     energy = jnp.mean(local_energies)
+
+    # O.shape = (n_samples, n_params)
+    # local_energies.shape = (n_samples,)
 
     n_samples = samples.shape[0]
     O_ = O / sqrt(n_samples)
     e_ = (local_energies - energy) / sqrt(n_samples)
-    energy_grad = 2 * jnp.real(O_ @ e_)
+    energy_grad_flat = 2 * jnp.real(O_.T.conj() @ e_)
 
-    return energy.real, energy_grad
+    return energy.real, re(energy_grad_flat)
 
 
-def energy_value_and_natural_grad(
-    eloc: Callable,
-    logpsi: Callable,
-    params: RBMParams,
-    samples: Float[Array, "n_samples ..."],
-    eps=1e-5,
-):
+# def energy_value_and_natural_grad(
+#     eloc: Callable,
+#     logpsi: Callable,
+#     params: RBMParams,
+#     samples: Float[Array, "n_samples ..."],
+#     eps=1e-5,
+# ):
 
-    O = jax.vmap(jax.grad(logpsi), in_axes=(None, 0))(params, samples)
+#     O = jax.vmap(jax.grad(logpsi), in_axes=(None, 0))(params, samples)
 
-    local_energies = jax.vmap(lambda x: eloc(logpsi, params, x))(samples)
-    energy = jnp.mean(local_energies)
+#     local_energies = jax.vmap(lambda x: eloc(logpsi, params, x))(samples)
+#     energy = jnp.mean(local_energies)
 
-    n_samples = samples.shape[0]
-    O_ = O / sqrt(n_samples)
-    e_ = (local_energies - energy) / sqrt(n_samples)
-    energy_grad = 2 * jnp.real(O_ @ e_)
+#     n_samples = samples.shape[0]
+#     O_ = O / sqrt(n_samples)
+#     e_ = (local_energies - energy) / sqrt(n_samples)
+#     energy_grad = 2 * jnp.real(O_ @ e_)
 
-    S = jnp.conj(O_).T @ O_
-    S = S.at[jnp.diag_indices_from(S)].add(eps)
-    natural_grad = jnp.linalg.solve(S, energy_grad)
+#     S = O_.T.conj() @ O_
+#     S = S.at[jnp.diag_indices_from(S)].add(eps)
+#     natural_grad = jnp.linalg.solve(S, energy_grad)
 
-    return energy.real, natural_grad
+#     return energy.real, natural_grad
