@@ -1,0 +1,35 @@
+[project]
+name = "ccq-gs-workshop-vmc"
+version = "0.1.0"
+description = "CCQ Graduate Scholar Workshop: Neural Network Quantum States and Variational Monte Carlo"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "jax>=0.4.20",
+    "jaxlib>=0.4.20",
+    "jaxtyping>=0.2.25",
+    "optax>=0.1.5",
+    "matplotlib>=3.7.0",
+    "jupyter>=1.0.0",
+    "ipykernel>=6.25.0",
+]
+
+[project.optional-dependencies]
+dev = ["black>=23.0.0"]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_backend"
+
+[tool.setuptools]
+py-modules = []
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
